@@ -1,16 +1,11 @@
-import cv2
+import cv2  # noqa
 import os
 import time
-import google.generativeai as genai
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+import google.generativeai as genai  # noqa
+import numpy as np  # noqa
+from PIL import Image, ImageDraw, ImageFont  # noqa
 import io
 import json
-import logging
-
-# 로깅 설정
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class SafetyMonitor:
     def __init__(self):
@@ -254,6 +249,7 @@ class SafetyMonitor:
             if response and response.text:
                 try:
                     text = response.text.strip()
+                    # 코드블록 제거
                     if text.startswith("```"):
                         text = text.split("```")[1] if "```" in text else text
                     text = text.replace("json", "", 1).strip() if text.startswith("json") else text
@@ -261,12 +257,13 @@ class SafetyMonitor:
                     for scenario in self.danger_scenarios:
                         self.danger_states[scenario['id']] = int(result.get(scenario['id'], 0))
                 except json.JSONDecodeError:
-                    logger.error("JSON 파싱 오류: %s", response.text)
-
+                    print("JSON 파싱 오류:", response.text)
+                    
         except Exception as e:
-            logger.error("분석 중 오류 발생: %s", e)
+            print(f"분석 중 오류 발생: {e}")
         finally:
             self.is_analyzing = False
+        print(result)
 
     def put_korean_text(self, img, text, position, color=(0, 0, 255)):
         img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
@@ -278,7 +275,7 @@ class SafetyMonitor:
 def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        logger.error("카메라를 초기화할 수 없습니다.")
+        print("카메라를 초기화할 수 없습니다.")
         return
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -286,30 +283,33 @@ def main():
 
     monitor = SafetyMonitor()
 
-    logger.info("실시간 안전 모니터링을 시작합니다.")
-    logger.info("'a' 키를 눌러 분석을 시작합니다.")
-    logger.info("'q' 키를 눌러 종료합니다.")
+    print("실시간 안전 모니터링을 시작합니다.")
+    print("'a' 키를 눌러 분석을 시작합니다.")
+    print("'q' 키를 눌러 종료합니다.")
 
     try:
         while True:
             ret, frame = cap.read()
             if not ret:
-                logger.error("프레임을 가져올 수 없습니다.")
+                print("프레임을 가져올 수 없습니다.")
                 break
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord('a'):
-                logger.info("분석을 시작합니다...")
+                print("\n분석을 시작합니다...")
                 monitor.analyze_frame(frame)
 
+            # 배경 사각형
             overlay = frame.copy()
             cv2.rectangle(overlay, (0, 0), (500, 400), (0, 0, 0), -1)
             cv2.addWeighted(overlay, 0.7, frame, 0.3, 0, frame)
 
+            # 제목
             y_position = 30
             frame = monitor.put_korean_text(frame, "안전 모니터링 시스템", (10, y_position), (255, 255, 255))
             y_position += 40
 
+            # 경고 메시지 출력
             has_danger = False
             for scenario in monitor.danger_scenarios:
                 if monitor.danger_states.get(scenario['id'], 0) == 1:
