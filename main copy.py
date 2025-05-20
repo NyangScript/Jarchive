@@ -236,41 +236,11 @@ class SafetyMonitor:
             self.is_analyzing = False
         print(result)
 
-    def put_korean_text(self, img, text, position, color=(0, 0, 255), is_title=False, is_warning=False, max_width=None):
+    def put_korean_text(self, img, text, position, color=(0, 0, 255)):
         img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         draw = ImageDraw.Draw(img_pil)
-        font = ImageFont.truetype(self.font_path, self.title_font_size if is_title else (self.warning_font_size if is_warning else self.font_size))
-
-        if max_width is not None:
-            words = text.split(' ')
-            lines = []
-            current_line = ''
-            for word in words:
-                # Check width with the next word
-                test_line = current_line + (' ' if current_line else '') + word
-                bbox = draw.textbbox((0, 0), test_line, font=font)
-                text_width = bbox[2] - bbox[0] # Use textbbox for accurate width
-
-                if text_width <= max_width:
-                    current_line = test_line
-                else:
-                    # If adding the word exceeds max_width, add the current line
-                    # (before adding the word) and start a new line with the word.
-                    if current_line: # Only add if not empty
-                         lines.append(current_line)
-                    current_line = word
-            if current_line: # Add the last line
-                lines.append(current_line)
-
-            y_offset = position[1]
-            line_height = font.getbbox('가')[3] - font.getbbox('가')[1] + 5 # Approximate line height + padding
-            for line in lines:
-                 draw.text((position[0], y_offset), line, font=font, fill=color)
-                 y_offset += line_height
-            return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-        else:
-            # Draw single line if max_width is not specified
-            draw.text(position, text, font=font, fill=color)
+        font = ImageFont.truetype(self.font_path, self.font_size)
+        draw.text(position, text, font=font, fill=color)
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 def main():
@@ -308,12 +278,6 @@ def main():
     print("'a' 키를 눌러 분석을 시작합니다.")
     print("'q' 키를 눌러 종료합니다.")
 
-    # 오른쪽 패널의 x 좌표와 너비 설정
-    panel_x_start = 480
-    panel_width = 640 - panel_x_start # 160 pixels
-    text_margin = 10 # 텍스트 좌우 여백
-    text_area_width = panel_width - text_margin * 2 # 약 140 픽셀
-
     try:
         while True:
             ret, frame = cap.read()
@@ -326,71 +290,28 @@ def main():
                 print("\n분석을 시작합니다...")
                 monitor.analyze_frame(frame)
 
-            # 배경 사각형 (오른쪽에 정보 표시)
+            # 배경 사각형
             overlay = frame.copy()
-            cv2.rectangle(overlay, (panel_x_start, 0), (640, 480), (0, 0, 0), -1)
+            cv2.rectangle(overlay, (0, 0), (500, 400), (0, 0, 0), -1)
             cv2.addWeighted(overlay, 0.7, frame, 0.3, 0, frame)
 
             # 제목
-            y_position = 20
-            # 제목은 줄바꿈 필요 없으므로 max_width None
-            frame = monitor.put_korean_text(frame, "테스트 모니터링", (panel_x_start + text_margin, y_position), (255, 255, 255), is_title=True)
-            y_position += 30  # 세로 간격 조정
+            y_position = 30
+            frame = monitor.put_korean_text(frame, "안전 모니터링 시스템", (10, y_position), (255, 255, 255))
+            y_position += 40
 
-            # 현재 시간 표시
-            current_time = time.strftime("%H:%M:%S")
-            # 시간도 줄바꿈 필요 없으므로 max_width None
-            frame = monitor.put_korean_text(frame, f"시간: {current_time}", (panel_x_start + text_margin, y_position), (200, 200, 200))
-            y_position += 25  # 세로 간격 조정
-
-            # 구분선
-            cv2.line(frame, (panel_x_start + text_margin, y_position), (panel_x_start + panel_width - text_margin, y_position), (100, 100, 100), 1)
-            y_position += 15  # 세로 간격 조정
-
-            # 감지된 상태 표시
+            # 경고 메시지 출력
             has_danger = False
-            # 각 시나리오별 상태 표시
             for scenario in monitor.danger_scenarios:
                 if monitor.danger_states.get(scenario['id'], 0) == 1:
-                    # 경고 메시지는 줄바꿈 적용
-                    frame = monitor.put_korean_text(frame, scenario['warning'], (panel_x_start + text_margin, y_position), (0, 0, 255), is_warning=True, max_width=text_area_width)
-
-                    # 경고 메시지가 여러 줄일 경우 다음 텍스트 위치 계산
-                    dummy_img_pil = Image.new('RGB', (1, 1)) # Dummy image for text size calculation
-                    dummy_draw = ImageDraw.Draw(dummy_img_pil)
-                    font = ImageFont.truetype(monitor.font_path, monitor.warning_font_size)
-                    words = scenario['warning'].split(' ')
-                    current_line = ''
-                    line_count = 0
-                    for word in words:
-                        test_line = current_line + (' ' if current_line else '') + word
-                        bbox = dummy_draw.textbbox((0,0), test_line, font=font)
-                        text_width = bbox[2] - bbox[0]
-                        if text_width <= text_area_width:
-                             current_line = test_line
-                        else:
-                            if current_line:
-                                line_count += 1
-                            current_line = word
-                    if current_line:
-                         line_count += 1
-
-                    line_height = font.getbbox('가')[3] - font.getbbox('가')[1] + 5
-                    y_position += line_height * line_count + 5 # 각 경고 메시지 블록 사이 간격 추가
-
+                    frame = monitor.put_korean_text(frame, scenario['warning'], (10, y_position), (0, 0, 255))
+                    y_position += 40
                     has_danger = True
 
-            # 정상 상태 표시
             if not has_danger:
-                frame = monitor.put_korean_text(frame, "정상 상태", (panel_x_start + text_margin, y_position), (0, 255, 0))
+                frame = monitor.put_korean_text(frame, "정상 상태", (10, y_position), (0, 255, 0))
 
-            # 하단 안내 메시지
-            y_position = 440
-            frame = monitor.put_korean_text(frame, "\'a\': 분석 시작", (panel_x_start + text_margin, y_position), (200, 200, 200))
-            y_position += 20
-            frame = monitor.put_korean_text(frame, "\'q\': 종료", (panel_x_start + text_margin, y_position), (200, 200, 200))
-
-            cv2.imshow('테스트 모니터링 시스템', frame)
+            cv2.imshow('안전 모니터링 시스템', frame)
 
             if key == ord('q'):
                 break
