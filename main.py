@@ -245,13 +245,31 @@ class SafetyMonitor:
 
 def main():
     # ESP32-S3-CAM 스트리밍 URL 사용
-    cap = cv2.VideoCapture("http://192.168.2.101:81/stream")
+    stream_url = "http://192.168.2.101:81/stream"
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        print(f"카메라 스트림 연결 시도 중... (시도 {retry_count + 1}/{max_retries})")
+        cap = cv2.VideoCapture(stream_url)
+        if cap.isOpened():
+            print("카메라 스트림 연결 성공!")
+            break
+        else:
+            print("카메라 스트림 연결 실패. 재시도 중...")
+            retry_count += 1
+            time.sleep(2)  # 2초 대기 후 재시도
+    
     if not cap.isOpened():
         print("카메라 스트림을 초기화할 수 없습니다.")
+        print("다음 사항을 확인해주세요:")
+        print("1. ESP32-CAM이 켜져 있는지")
+        print("2. ESP32-CAM과 컴퓨터가 같은 네트워크에 연결되어 있는지")
+        print("3. ESP32-CAM의 IP 주소가 올바른지")
         return
 
     # 스트리밍 해상도 설정
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # ESP32-CAM 기본 해상도
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     monitor = SafetyMonitor()
