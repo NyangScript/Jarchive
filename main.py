@@ -1,9 +1,9 @@
-import cv2  # noqa
+import cv2  
 import os
 import time
-import google.generativeai as genai  # noqa
-import numpy as np  # noqa
-from PIL import Image, ImageDraw, ImageFont  # noqa
+import google.generativeai as genai  
+import numpy as np  
+from PIL import Image, ImageDraw, ImageFont  
 import io
 import json
 
@@ -191,36 +191,7 @@ class SafetyMonitor:
         self.last_analysis_time = 0
         self.analysis_interval = 1.0
 
-        self.danger_states = {
-            'gas_stove': 0,
-            'electric_heater': 0,
-            'sink_water': 0,
-            'bathtub_water': 0,
-            'fridge_door': 0,
-            'door_window': 0,
-            'gas_valve': 0,
-            'air_conditioner': 0,
-            'slippery_floor': 0,
-            'medicine': 0,
-            'stranger_door': 0,
-            'metal_microwave': 0,
-            'wet_electric': 0,
-            'medicine_time': 0,
-            'appliance_off': 0,
-            'food_storage': 0,
-            'laundry': 0,
-            'doorbell': 0,
-            'pet_food': 0,
-            'bathroom_light': 0,
-            'repetitive_behavior': 0,
-            'lost_item': 0,
-            'direction_confusion': 0,
-            'time_confusion': 0,
-            'seasonal_clothes': 0,
-            'cooking_confusion': 0,
-            'appliance_on': 0,
-            'appliance_usage': 0
-        }
+        self.danger_states = {scenario['id']: 0 for scenario in self.danger_scenarios}
 
     def analyze_frame(self, frame):
         current_time = time.time()
