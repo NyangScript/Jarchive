@@ -273,13 +273,15 @@ class SafetyMonitor:
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 def main():
-    cap = cv2.VideoCapture(0)
+    # ESP32-S3-CAM 스트리밍 URL 사용
+    cap = cv2.VideoCapture("http://192.168.2.101:81/stream")
     if not cap.isOpened():
-        print("카메라를 초기화할 수 없습니다.")
+        print("카메라 스트림을 초기화할 수 없습니다.")
         return
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    # 스트리밍 해상도 설정
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # ESP32-CAM 기본 해상도
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     monitor = SafetyMonitor()
 
