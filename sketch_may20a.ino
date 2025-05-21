@@ -15,28 +15,24 @@
 
 
 // AI-Thinker ESP32-CAM PIN Map
-#define PWDN_GPIO_NUM     -1 // Power down pin, -1 if not used
-#define RESET_GPIO_NUM    -1 // Reset pin, -1 if not used
-#define XCLK_GPIO_NUM     15
-#define SIOD_GPIO_NUM     4  // SDA (I2C Data)
-#define SIOC_GPIO_NUM     5  // SCL (I2C Clock)
+#define PWDN_GPIO_NUM     32
+#define RESET_GPIO_NUM    -1 // RST IO
+#define XCLK_GPIO_NUM      0
+#define SIOD_GPIO_NUM     26 // SDA
+#define SIOC_GPIO_NUM     27 // SCL
 
-#define Y9_GPIO_NUM       16 // D7
-#define Y8_GPIO_NUM       17 // D6
-#define Y7_GPIO_NUM       18 // D5
-#define Y6_GPIO_NUM       12 // D4
-#define Y5_GPIO_NUM       11 // D3
-#define Y4_GPIO_NUM       10 // D2
-#define Y3_GPIO_NUM       9  // D1
-#define Y2_GPIO_NUM       8  // D0
-#define VSYNC_GPIO_NUM    6
-#define HREF_GPIO_NUM     7
-#define PCLK_GPIO_NUM     13
 
-#define LED_PIN_1         48 // (일반적으로 ESP32S3 내장 RGB LED의 R 채널 또는 사용자 LED)
-#define LED_PIN_2         47 // (G 채널 또는 사용자 LED)
-#define LED_PIN_3         21 // (B 채널 또는 사용자 LED - 전면 실크 "3/LED"와 관련 있을 수 있음)
-#define LED_PIN_4         45 // (사용자 LED)
+#define Y9_GPIO_NUM       35
+#define Y8_GPIO_NUM       34
+#define Y7_GPIO_NUM       39
+#define Y6_GPIO_NUM       36
+#define Y5_GPIO_NUM       21
+#define Y4_GPIO_NUM       19
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    25
+#define HREF_GPIO_NUM     23
+#define PCLK_GPIO_NUM     22
 
 
 // Wi-Fi Credentials
@@ -66,9 +62,6 @@ void setup() {
  Serial.begin(115200);
  Serial.setDebugOutput(true);
  Serial.println();
-
- pinMode(LED_PIN_1, OUTPUT);
- digitalWrite(LED_PIN_1, LOW); // LED 끔
 
 
  camera_config_t config;
@@ -113,30 +106,13 @@ void setup() {
  config.grab_mode = CAMERA_GRAB_LATEST;   // 최신 프레임만 가져오도록 설정
 
 
- if(psramFound()){
-    config.frame_size = FRAMESIZE_UXGA; // 1600x1200 (고화질)
-    config.jpeg_quality = 10;          // 0-63 낮을수록 고화질
-    config.fb_count = 2;               // 프레임 버퍼 2개 사용 (스트리밍에 유리)
-    config.fb_location = CAMERA_FB_IN_PSRAM; // 프레임 버퍼를 PSRAM에 할당
-  } else {
-    config.frame_size = FRAMESIZE_SVGA;  // 800x600 (PSRAM 없을 시)
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
-    config.fb_location = CAMERA_FB_IN_DRAM;
-  }
-
-  // 카메라 초기화
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x\n", err);
-    // 초기화 실패 시 LED 빠르게 깜빡임
-    while(true) {
-      digitalWrite(LED_PIN_1, !digitalRead(LED_PIN_1));
-      delay(100);
-    }
-    return;
-  }
-  Serial.println("Camera initialized successfully.");
+ // 카메라 초기화
+ esp_err_t err = esp_camera_init(&config);
+ if (err != ESP_OK) {
+   Serial.printf("Camera init failed with error 0x%x", err);
+   return;
+ }
+ Serial.println("Camera initialized successfully.");
 
 
  // Wi-Fi 연결

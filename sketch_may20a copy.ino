@@ -1,5 +1,6 @@
 #include "esp_camera.h"
 #include "WiFi.h"
+#include "ESPAsyncWebServer.h"
 #include "esp_timer.h"
 #include "img_converters.h"
 #include "Arduino.h"
