@@ -15,28 +15,22 @@
 
 
 // AI-Thinker ESP32-CAM PIN Map
-#define PWDN_GPIO_NUM     -1 // Power down pin, -1 if not used
-#define RESET_GPIO_NUM    -1 // Reset pin, -1 if not used
-#define XCLK_GPIO_NUM     15
-#define SIOD_GPIO_NUM     4  // SDA (I2C Data)
-#define SIOC_GPIO_NUM     5  // SCL (I2C Clock)
-
-#define Y9_GPIO_NUM       16 // D7
-#define Y8_GPIO_NUM       17 // D6
-#define Y7_GPIO_NUM       18 // D5
-#define Y6_GPIO_NUM       12 // D4
-#define Y5_GPIO_NUM       11 // D3
-#define Y4_GPIO_NUM       10 // D2
-#define Y3_GPIO_NUM       9  // D1
-#define Y2_GPIO_NUM       8  // D0
-#define VSYNC_GPIO_NUM    6
-#define HREF_GPIO_NUM     7
-#define PCLK_GPIO_NUM     13
-
-#define LED_PIN_1         48 // (일반적으로 ESP32S3 내장 RGB LED의 R 채널 또는 사용자 LED)
-#define LED_PIN_2         47 // (G 채널 또는 사용자 LED)
-#define LED_PIN_3         21 // (B 채널 또는 사용자 LED - 전면 실크 "3/LED"와 관련 있을 수 있음)
-#define LED_PIN_4         45 // (사용자 LED)
+#define PWDN_GPIO_NUM     -1
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM     5
+#define Y9_GPIO_NUM       4
+#define Y8_GPIO_NUM       6
+#define Y7_GPIO_NUM       7
+#define Y6_GPIO_NUM       14
+#define Y5_GPIO_NUM       17
+#define Y4_GPIO_NUM       21
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM       16
+#define VSYNC_GPIO_NUM    1
+#define HREF_GPIO_NUM     2
+#define PCLK_GPIO_NUM     15
+#define SIOD_GPIO_NUM  8
+#define SIOC_GPIO_NUM  9
 
 
 // Wi-Fi Credentials
@@ -66,9 +60,6 @@ void setup() {
  Serial.begin(115200);
  Serial.setDebugOutput(true);
  Serial.println();
-
- pinMode(LED_PIN_1, OUTPUT);
- digitalWrite(LED_PIN_1, LOW); // LED 끔
 
 
  camera_config_t config;
