@@ -14,7 +14,7 @@
 #define PART_BOUNDARY "123456789000000000000987654321"
 
 
-// AI-Thinker ESP32-CAM PIN Map
+// ESP32-S3 AI Camera PIN Map
 #define PWDN_GPIO_NUM     -1
 #define RESET_GPIO_NUM    -1
 #define XCLK_GPIO_NUM     5
@@ -34,8 +34,8 @@
 
 
 // Wi-Fi Credentials
-const char* ssid = "TOFFICE-RPL";         // 실제 Wi-Fi SSID로 변경
-const char* password = "WMS1348B2F"; // 실제 Wi-Fi 비밀번호로 변경
+const char* ssid = "DLAB";         // 실제 Wi-Fi SSID로 변경
+const char* password = "dlab2021!"; // 실제 Wi-Fi 비밀번호로 변경
 
 
 WebServer server(80); // HTTP 서버 포트 80번
@@ -54,106 +54,103 @@ void handleNotFound();
 
 
 void setup() {
- WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable brownout detector
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  Serial.println();
 
+  camera_config_t config;
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d0 = Y2_GPIO_NUM;
+  config.pin_d1 = Y3_GPIO_NUM;
+  config.pin_d2 = Y4_GPIO_NUM;
+  config.pin_d3 = Y5_GPIO_NUM;
+  config.pin_d4 = Y6_GPIO_NUM;
+  config.pin_d5 = Y7_GPIO_NUM;
+  config.pin_d6 = Y8_GPIO_NUM;
+  config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_xclk = XCLK_GPIO_NUM;
+  config.pin_pclk = PCLK_GPIO_NUM;
+  config.pin_vsync = VSYNC_GPIO_NUM;
+  config.pin_href = HREF_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
+  config.pin_pwdn = PWDN_GPIO_NUM;
+  config.pin_reset = RESET_GPIO_NUM;
+  config.xclk_freq_hz = 20000000;
+  config.frame_size = FRAMESIZE_UXGA;
+  config.pixel_format = PIXFORMAT_JPEG;  // for streaming
+  //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
+  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  config.fb_location = CAMERA_FB_IN_PSRAM;
+  config.jpeg_quality = 12;
+  config.fb_count = 1;
 
- Serial.begin(115200);
- Serial.setDebugOutput(true);
- Serial.println();
-
-
- camera_config_t config;
- config.ledc_channel = LEDC_CHANNEL_0;
- config.ledc_timer = LEDC_TIMER_0;
- config.pin_d0 = Y2_GPIO_NUM;
- config.pin_d1 = Y3_GPIO_NUM;
- config.pin_d2 = Y4_GPIO_NUM;
- config.pin_d3 = Y5_GPIO_NUM;
- config.pin_d4 = Y6_GPIO_NUM;
- config.pin_d5 = Y7_GPIO_NUM;
- config.pin_d6 = Y8_GPIO_NUM;
- config.pin_d7 = Y9_GPIO_NUM;
- config.pin_xclk = XCLK_GPIO_NUM;
- config.pin_pclk = PCLK_GPIO_NUM;
- config.pin_vsync = VSYNC_GPIO_NUM;
- config.pin_href = HREF_GPIO_NUM;
- config.pin_sccb_sda = SIOD_GPIO_NUM;
- config.pin_sccb_scl = SIOC_GPIO_NUM;
- config.pin_pwdn = PWDN_GPIO_NUM;
- config.pin_reset = RESET_GPIO_NUM;
- config.xclk_freq_hz = 20000000; // 20MHz
- config.pixel_format = PIXFORMAT_JPEG; // JPEG 포맷으로 설정 (MJPEG에 적합)
-
-
- // 프레임 크기 설정 (해상도가 너무 높으면 스트리밍이 느릴 수 있음)
- // PIXFORMAT_JPEG일 때 다음 크기 중 하나를 사용:
- // FRAMESIZE_UXGA (1600x1200)
- // FRAMESIZE_SXGA (1280x1024)
- // FRAMESIZE_XGA (1024x768)
- // FRAMESIZE_SVGA (800x600)
- // FRAMESIZE_VGA (640x480)
- // FRAMESIZE_CIF (352x288)
- // FRAMESIZE_QVGA (320x240)
- // FRAMESIZE_HQVGA (240x176)
- // FRAMESIZE_QQVGA (160x120)
- config.frame_size = FRAMESIZE_VGA; // VGA (640x480)로 설정. 필요에 따라 변경
- config.jpeg_quality = 12; // 0-63, 낮을수록 품질 높음 (압축률 낮음), 높을수록 품질 낮음 (압축률 높음)
-                          // 스트리밍에는 10-12 정도가 적당할 수 있음
- config.fb_count = 2;     // 프레임 버퍼 수. 2 이상 권장 (더블 버퍼링)
- config.fb_location = CAMERA_FB_IN_PSRAM; // PSRAM 사용 가능하면 PSRAM에 프레임 버퍼 할당
- config.grab_mode = CAMERA_GRAB_LATEST;   // 최신 프레임만 가져오도록 설정
-
-
- if(psramFound()){
-    config.frame_size = FRAMESIZE_UXGA; // 1600x1200 (고화질)
-    config.jpeg_quality = 10;          // 0-63 낮을수록 고화질
-    config.fb_count = 2;               // 프레임 버퍼 2개 사용 (스트리밍에 유리)
-    config.fb_location = CAMERA_FB_IN_PSRAM; // 프레임 버퍼를 PSRAM에 할당
+  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
+  //                      for larger pre-allocated frame buffer.
+  if (config.pixel_format == PIXFORMAT_JPEG) {
+    if (psramFound()) {
+      config.jpeg_quality = 10;
+      config.fb_count = 2;
+      config.grab_mode = CAMERA_GRAB_LATEST;
+    } else {
+      // Limit the frame size when PSRAM is not available
+      config.frame_size = FRAMESIZE_SVGA;
+      config.fb_location = CAMERA_FB_IN_DRAM;
+    }
   } else {
-    config.frame_size = FRAMESIZE_SVGA;  // 800x600 (PSRAM 없을 시)
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
-    config.fb_location = CAMERA_FB_IN_DRAM;
+    // Best option for face detection/recognition
+    config.frame_size = FRAMESIZE_240X240;
+#if CONFIG_IDF_TARGET_ESP32S3
+    config.fb_count = 2;
+#endif
   }
+
+#if defined(CAMERA_MODEL_ESP_EYE)
+  pinMode(13, INPUT_PULLUP);
+  pinMode(14, INPUT_PULLUP);
+#endif
 
   // 카메라 초기화
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x\n", err);
-    // 초기화 실패 시 LED 빠르게 깜빡임
-    while(true) {
-      digitalWrite(LED_PIN_1, !digitalRead(LED_PIN_1));
-      delay(100);
-    }
+    Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
-  Serial.println("Camera initialized successfully.");
+  Serial.println("카메라 초기화 성공");
 
+  // Wi-Fi 연결
+  WiFi.begin(ssid, password);
+  WiFi.setSleep(false);
+  Serial.print("WiFi 연결 중...");
+  
+  int wifi_retry = 0;
+  while (WiFi.status() != WL_CONNECTED && wifi_retry < 20) {
+    delay(500);
+    Serial.print(".");
+    wifi_retry++;
+  }
+  
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\nWiFi 연결 실패");
+    return;
+  }
+  
+  Serial.println("\nWiFi 연결 성공");
+  Serial.print("IP 주소: ");
+  Serial.println(WiFi.localIP());
 
- // Wi-Fi 연결
- WiFi.begin(ssid, password);
- Serial.print("Connecting to WiFi...");
- while (WiFi.status() != WL_CONNECTED) {
-   delay(500);
-   Serial.print(".");
- }
- Serial.println("\nWiFi connected");
- Serial.print("IP Address: ");
- Serial.println(WiFi.localIP());
+  // 웹 서버 핸들러 설정
+  server.on("/", HTTP_GET, handleRoot);
+  server.onNotFound(handleNotFound);
+  server.begin();
+  Serial.println("HTTP 서버가 포트 80에서 시작됨");
 
-
- // 웹 서버 핸들러 설정
- server.on("/", HTTP_GET, handleRoot);
- server.onNotFound(handleNotFound);
- server.begin(); // 포트 80 서버 시작
- Serial.println("HTTP server started on port 80");
-
-
- // MJPEG 스트리밍 서버 핸들러 설정
- streamServer.on("/stream", HTTP_GET, handleStream);
- streamServer.onNotFound(handleNotFound); // 스트림 서버에도 404 핸들러 추가
- streamServer.begin(); // 포트 81 서버 시작
- Serial.println("MJPEG Stream server started on port 81 (/stream)");
+  // MJPEG 스트리밍 서버 핸들러 설정
+  streamServer.on("/stream", HTTP_GET, handleStream);
+  streamServer.onNotFound(handleNotFound);
+  streamServer.begin();
+  Serial.println("MJPEG 스트림 서버가 포트 81에서 시작됨 (/stream)");
 }
 
 
