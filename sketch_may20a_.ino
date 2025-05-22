@@ -7,8 +7,6 @@
 #include "soc/rtc_cntl_reg.h" // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <WebServer.h> // ESP32 WebServer 라이브러리 사용
-#include "page1.h" // 이상행동 기록 페이지 헤더
-#include "page2.h" // 위험행동 기록 페이지 헤더
 
 
 // WARNING!!! Make sure that public ssh key is changed in examples/ota_verify_ant_rollback/main/ota_verify_example_main.c
@@ -144,8 +142,6 @@ void setup() {
 
   // 웹 서버 핸들러 설정
   server.on("/", HTTP_GET, handleRoot);
-  server.on("/anomalous_record", HTTP_GET, handleAnomalousRecord); // 이상행동 기록 라우트 추가
-  server.on("/dangerous_record", HTTP_GET, handleDangerousRecord); // 위험행동 기록 라우트 추가
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP 서버가 포트 80에서 시작됨");
@@ -169,92 +165,38 @@ void handleRoot() {
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta charset='utf-8'>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>";
-  html += "<title>메인화면</title>";
+  html += "<title>ESP32-CAM 안전 모니터링</title>";
   html += "<style>";
   html += "* { box-sizing: border-box; margin: 0; padding: 0; }";
-  html += "body { font-family: 'Arial', sans-serif; background-color: #e0f7fa; color: #333; line-height: 1.6; padding-bottom: 60px; }"; // 바텀 네비게이션 높이만큼 패딩 추가
-  html += ".header { background-color: #00BCD4; color: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }";
-  html += ".header h1 { font-size: 20px; font-weight: bold; }";
-  html += ".container { padding: 10px; }";
-  html += ".card { background-color: #ffffff; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }";
-
-  /* Profile & Icons Section */
-  html += ".profile-section { text-align: center; margin-bottom: 15px; }";
-  html += ".profile-picture { width: 70px; height: 70px; background-color: #b2ebf2; border-radius: 50%; margin: 0 auto 10px; display: block; }";
-  html += ".profile-section p { font-size: 14px; color: #555; margin-bottom: 15px; }"; // 사용자 이름 스타일
-  html += ".icon-buttons { display: flex; justify-content: space-around; }";
-  html += ".icon-button-link { text-decoration: none; color: inherit; }"; // 링크 스타일 추가
-  html += ".icon-button-link div { display: flex; flex-direction: column; align-items: center; }"; // 아이콘 버튼 레이아웃
-  html += ".icon-button-link .icon { width: 40px; height: 40px; background-color: #00BCD4; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; margin-bottom: 5px; }"; // 아이콘 스타일
-  html += ".icon-button-link:hover { opacity: 0.8; }"; // 호버 효과 추가
-
-  /* Weekly Status Section */
-  html += ".weekly-status { display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px; }";
-  html += ".status-item { flex: 1; padding: 10px; border-right: 1px solid #eee; }";
-  html += ".status-item:last-child { border-right: none; }";
-  html += ".status-item p { font-size: 12px; color: #666; margin-bottom: 5px; }";
-  html += ".status-item h3 { font-size: 20px; color: #00BCD4; font-weight: bold; }";
-
-  /* Video Stream Section */
-  html += ".video-section h2 { font-size: 18px; margin-bottom: 10px; color: #333; }";
-  html += "#video-container { width: 100%; position: relative; background-color: #000; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }";
-  html += "#video-stream { width: 100%; height: auto; display: block; border-radius: 8px; }";
-
-  /* Info Panel Section (Integrated) */
-  html += ".info-panel { margin-bottom: 15px; }";
-  html += ".info-panel h2 { font-size: 18px; margin-bottom: 10px; color: #333; }";
-  html += ".info-section p { margin: 5px 0; font-size: 14px; color: #555; }";
-  html += "#message-area { margin-top: 10px; min-height: 40px; }";
-  html += ".warning-message { color: #d32f2f; font-size: 13px; padding: 8px; background-color: #ffcdd2; border-radius: 4px; margin-bottom: 5px; word-break: break-word; }";
-  html += ".normal-status { color: #388e3c; font-size: 14px; padding: 8px; background-color: #c8e6c9; border-radius: 4px; }";
-
-  /* Button */
+  html += "body { font-family: Arial, sans-serif; background-color: #f0f0f0; }";
+  html += "#video-container { width: 100%; position: relative; background-color: #000; }";
+  html += "#video-stream { width: 100%; height: auto; display: block; }";
+  html += "#info-panel { width: 100%; background-color: #fff; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }";
+  html += "h2 { color: #333; font-size: 20px; margin-bottom: 15px; }";
+  html += ".info-section { margin-bottom: 15px; }";
+  html += ".info-section p { margin: 5px 0; font-size: 16px; color: #666; }";
+  html += ".warning-message { color: #ff4444; font-size: 14px; padding: 8px; background-color: #ffeeee; border-radius: 4px; margin-bottom: 8px; }";
+  html += ".normal-status { color: #4CAF50; font-size: 16px; padding: 8px; background-color: #e8f5e9; border-radius: 4px; }";
   html += ".button-container { margin-top: 15px; }";
-  html += "#analyze-button { width: 100%; padding: 12px; background-color: #00BCD4; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease; }";
-  html += "#analyze-button:disabled { background-color: #b2ebf2; cursor: not-allowed; }";
-  html += "#analysis-status { text-align: center; margin-top: 10px; font-size: 13px; color: #00796b; }";
-
-  /* Bottom Navigation */
-  html += ".bottom-nav { display: flex; justify-content: space-around; padding: 10px 0; background-color: #ffffff; border-top: 1px solid #eee; position: fixed; width: 100%; bottom: 0; left: 0; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 1000; }";
-  html += ".nav-item { text-align: center; flex-grow: 1; color: #777; font-size: 10px; text-decoration: none; }";
-  html += ".nav-item .icon { width: 24px; height: 24px; font-size: 20px; margin: 0 auto 5px; }";
-  html += ".nav-item.active .icon { color: #00BCD4; }";
-  html += ".nav-item.active { color: #00BCD4; }"; // 활성 상태 텍스트 색상
-
-  // 미디어 쿼리는 필요시 추가하여 특정 크기 이상에서 다른 레이아웃 적용 가능
-  // html += "@media (min-width: 600px) { ... }";
-
+  html += "#analyze-button { width: 100%; padding: 12px; background-color: #2196F3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }";
+  html += "#analyze-button:disabled { background-color: #ccc; }";
+  html += "#analysis-status { text-align: center; margin-top: 10px; font-size: 14px; }";
+  html += "@media (min-width: 768px) {";
+  html += "  body { display: flex; }";
+  html += "  #video-container { flex: 2; }";
+  html += "  #info-panel { flex: 1; max-width: 300px; }";
+  html += "}";
   html += "</style>";
   html += "</head><body>";
 
-  /* Header */
-  html += "<div class='header'><h1>메인화면</h1></div>";
-
-  /* Main Content Area */
-  html += "<div class='container'>";
-
-  /* Profile & Icons Card */
-  html += "<div class='card profile-section'>";
-  html += "<div class='profile-picture'></div>";
-  html += "<p>사용자 이름</p>"; // 임시 사용자 이름
-  html += "<div class='icon-buttons'>";
-  html += "<a href='/anomalous_record' class='icon-button-link'><div><div class='icon'>?</div>이상행동 기록</div></a>";
-  html += "<a href='/dangerous_record' class='icon-button-link'><div><div class='icon'>▲</div>위험행동 기록</div></a>";
-  html += "<a href='/report' class='icon-button-link'><div><div class='icon'>!</div>신고</div></a>";
-  html += "</div>"; // end icon-buttons
-  html += "</div>"; // end card
-
-  /* Real-time Video Section */
-  html += "<div class='card video-section'>";
-  html += "<h2>실시간 촬영</h2>";
+  // 영상 영역
   html += "<div id='video-container'>";
   html += "<img id='video-stream' src='http://" + WiFi.localIP().toString() + ":81/stream' crossorigin='anonymous'>";
   html += "</div>";
-  html += "</div>"; // end card
 
-  /* Info Panel Section (Integrated into Card) */
-  html += "<div class='card info-panel'>";
-  html += "<h2>정보 및 분석</h2>";
+  // 정보 패널
+  html += "<div id='info-panel'>";
+  html += "<h2>안전 모니터링</h2>";
   html += "<div class='info-section'><p>시간: <span id='current-time'>로딩 중...</span></p></div>";
   html += "<div id='message-area'>";
   html += "<div class='normal-status' id='status-text'>정상 상태</div>";
@@ -263,25 +205,13 @@ void handleRoot() {
   html += "<button id='analyze-button'>분석 시작</button>";
   html += "</div>";
   html += "<div id='analysis-status'></div>";
-  html += "</div>"; // end card
-
-  html += "</div>"; // end container
-
-  /* Bottom Navigation */
-  // 홈 버튼을 활성 상태로 표시
-  html += "<div class='bottom-nav'>";
-  html += "<a href='/' class='nav-item active'><div class='icon'>🏠</div>홈</a>"; // 현재 페이지 링크
-  html += "<a href='/anomalous_record' class='nav-item'><div class='icon'>?</div>이상행동 기록</a>"; // 이상행동 기록으로 이동 링크
-  html += "<a href='/dangerous_record' class='nav-item'><div class='icon'>▲</div>위험행동 기록</a>"; // 위험행동 기록으로 이동 링크
-  html += "<a href='/report' class='nav-item'><div class='icon'>🔔</div>신고</a>"; // 신고 페이지 (예정)
-  html += "</div>"; // end bottom-nav
-
+  html += "</div>";
 
   html += "<script>";
   html += "const GEMINI_API_KEY = 'AIzaSyCK5WE5NxHlCHQGd5agdkl5dZs0KLgFIXM';";
   html += "const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=' + GEMINI_API_KEY;";
 
-  // 위험 시나리오 정의 (기존 코드 유지)
+  // 위험 시나리오 정의
   html += "const dangerScenarios = [";
   html += "{ id: 'left_hand', name: '왼손 들기', warning: '테스트: 왼손을 들었습니다!', description: '사람이 왼손을 들고 있는지' },";
   html += "{ id: 'right_hand', name: '오른손 들기', warning: '테스트: 오른손을 들었습니다!', description: '사람이 오른손을 들고 있는지' },";
@@ -296,12 +226,12 @@ void handleRoot() {
   html += "let analysisTimer = null;";
   html += "let speakingTimer = {};";
 
-  // dangerStates 초기화 (기존 코드 유지)
+  // dangerStates 초기화
   html += "dangerScenarios.forEach(scenario => {";
   html += "  dangerStates[scenario.id] = 0;";
   html += "});";
 
-  // 시간 업데이트 함수 (기존 코드 유지)
+  // 시간 업데이트 함수
   html += "function updateTime() {";
   html += "  const now = new Date();";
   html += "  const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });";
@@ -310,7 +240,7 @@ void handleRoot() {
   html += "setInterval(updateTime, 1000);";
   html += "updateTime();";
 
-  // 이미지 캡처 함수 (기존 코드 유지)
+  // 이미지 캡처 함수
   html += "function captureFrame() {";
   html += "  const video = document.getElementById('video-stream');";
   html += "  const canvas = document.createElement('canvas');";
@@ -321,7 +251,7 @@ void handleRoot() {
   html += "  return canvas.toDataURL('image/jpeg').split(',')[1];";
   html += "}";
 
-  // Gemini API 호출 함수 (기존 코드 유지)
+  // Gemini API 호출 함수
   html += "async function analyzeImage(base64Image) {";
   html += "  try {";
   html += "    const response = await fetch(GEMINI_API_URL, {";
@@ -361,7 +291,7 @@ void handleRoot() {
   html += "  }";
   html += "}";
 
-  // UI 업데이트 함수 (기존 코드 유지)
+  // UI 업데이트 함수
   html += "function updateUI(analysisResult) {";
   html += "  const messageArea = document.getElementById('message-area');";
   html += "  const statusTextElement = document.getElementById('status-text');";
@@ -382,7 +312,7 @@ void handleRoot() {
   html += "  statusTextElement.style.display = hasDanger ? 'none' : 'block';";
   html += "}";
 
-  // 분석 시작 함수 (기존 코드 유지)
+  // 분석 시작 함수
   html += "function startAnalysis() {";
   html += "  const analyzeButton = document.getElementById('analyze-button');";
   html += "  if (isAnalyzing) return;";
@@ -390,37 +320,30 @@ void handleRoot() {
   html += "  isAnalyzing = true;";
   html += "  analyzeButton.disabled = true;";
   html += "  analyzeButton.textContent = '분석 중...';";
-  html += "  document.getElementById('analysis-status').textContent = '이미지 캡처 및 분석 중...';";
-
 
   html += "  const base64Image = captureFrame();";
   html += "  if (base64Image) {";
   html += "    analyzeImage(base64Image).then(result => {";
   html += "      if (result) {";
   html += "        updateUI(result);";
-  html += "        document.getElementById('analysis-status').textContent = '분석 완료.';";
-  html += "      } else {";
-  html += "        document.getElementById('analysis-status').textContent = '분석 실패.';";
   html += "      }";
   html += "      isAnalyzing = false;";
   html += "      analyzeButton.disabled = false;";
   html += "      analyzeButton.textContent = '분석 시작';";
   html += "    }).catch(error => {";
   html += "      console.error('분석 중 오류:', error);";
-  html += "      document.getElementById('analysis-status').textContent = '오류 발생: ' + error.message;";
   html += "      isAnalyzing = false;";
   html += "      analyzeButton.disabled = false;";
   html += "      analyzeButton.textContent = '분석 시작';";
   html += "    });";
   html += "  } else {";
-  html += "    document.getElementById('analysis-status').textContent = '이미지 캡처 실패.';";
   html += "    isAnalyzing = false;";
   html += "    analyzeButton.disabled = false;";
   html += "    analyzeButton.textContent = '분석 시작';";
   html += "  }";
   html += "}";
 
-  // 이벤트 리스너 연결 (기존 코드 유지)
+  // 이벤트 리스너 연결
   html += "document.getElementById('analyze-button').addEventListener('click', startAnalysis);";
 
   html += "</script>";
