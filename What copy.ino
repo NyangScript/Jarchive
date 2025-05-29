@@ -7,8 +7,6 @@
 #include "soc/rtc_cntl_reg.h" // Disable brownout problems
 #include "driver/rtc_io.h"
 #include <WebServer.h> // ESP32 WebServer 라이브러리 사용
-#include "page1.h" // 이상행동 기록 페이지 헤더
-#include "page2.h" // 위험행동 기록 페이지 헤더
 
 
 // WARNING!!! Make sure that public ssh key is changed in examples/ota_verify_ant_rollback/main/ota_verify_example_main.c
@@ -36,8 +34,8 @@
 
 
 // Wi-Fi Credentials
-const char* ssid = "전혜리의 iPhone";         // 실제 Wi-Fi SSID로 변경
-const char* password = "12121212"; // 실제 Wi-Fi 비밀번호로 변경
+const char* ssid = "2F-CR3_CR4";         // 실제 Wi-Fi SSID로 변경
+const char* password = "WMS1348B2F"; // 실제 Wi-Fi 비밀번호로 변경
 
 
 WebServer server(80); // HTTP 서버 포트 80번
@@ -121,13 +119,6 @@ void setup() {
   }
   Serial.println("카메라 초기화 성공");
 
-  // 카메라 센서 설정
-  sensor_t * s = esp_camera_sensor_get();
-  if (s) {
-    s->set_vflip(s, 1);  // 수직 뒤집기
-    s->set_hmirror(s, 1);  // 수평 뒤집기
-  }
-
   // Wi-Fi 연결
   WiFi.begin(ssid, password);
   WiFi.setSleep(false);
@@ -151,8 +142,6 @@ void setup() {
 
   // 웹 서버 핸들러 설정
   server.on("/", HTTP_GET, handleRoot);
-  server.on("/anomalous_record", HTTP_GET, handleAnomalousRecord); // 이상행동 기록 라우트 추가
-  server.on("/dangerous_record", HTTP_GET, handleDangerousRecord); // 위험행동 기록 라우트 추가
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP 서버가 포트 80에서 시작됨");
