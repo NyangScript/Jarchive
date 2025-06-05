@@ -36,7 +36,7 @@
 
 
 // Wi-Fi Credentials
-const char* ssid = "TOFFICE-RPL";         // 실제 Wi-Fi SSID로 변경
+const char* ssid = "2F-CR3_CR4";         // 실제 Wi-Fi SSID로 변경
 const char* password = "WMS1348B2F"; // 실제 Wi-Fi 비밀번호로 변경
 
 

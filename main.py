@@ -48,9 +48,9 @@ class SafetyMonitor:
 
         self.active_warnings = []
         self.font_path = '/Users/brody/Downloads/Mediapipe/Project/NanumGothic.ttf'
-        self.font_size = 18  
-        self.title_font_size = 22 
-        self.warning_font_size = 14
+        self.font_size = 36  # 기본 폰트 크기 증가
+        self.title_font_size = 44  # 제목 폰트 크기 증가
+        self.warning_font_size = 28  # 경고 메시지 폰트 크기 증가
         self.is_analyzing = False
         self.last_analysis_time = 0
         self.analysis_interval = 1.0
@@ -139,32 +139,32 @@ class SafetyMonitor:
 
 def main():
     # ESP32-S3-CAM 스트리밍 URL 사용
-    # stream_url = "http://192.168.35.179:81/stream"
-    # max_retries = 3
-    # retry_count = 0
+    stream_url = "http://192.168.2.93:81/stream"
+    max_retries = 3
+    retry_count = 0
     
-    # while retry_count < max_retries:
-    #     print(f"카메라 스트림 연결 시도 중... (시도 {retry_count + 1}/{max_retries})")
-    #     cap = cv2.VideoCapture(stream_url)
-    #     if cap.isOpened():
-    #         print("카메라 스트림 연결 성공!")
-    #         break
-    #     else:
-    #         print("카메라 스트림 연결 실패. 재시도 중...")
-    #         retry_count += 1
-    #         time.sleep(2)  # 2초 대기 후 재시도
+    while retry_count < max_retries:
+        print(f"카메라 스트림 연결 시도 중... (시도 {retry_count + 1}/{max_retries})")
+        cap = cv2.VideoCapture(stream_url)
+        if cap.isOpened():
+            print("카메라 스트림 연결 성공!")
+            break
+        else:
+            print("카메라 스트림 연결 실패. 재시도 중...")
+            retry_count += 1
+            time.sleep(2)  # 2초 대기 후 재시도
     
-    # if not cap.isOpened():
-    #     print("카메라 스트림을 초기화할 수 없습니다.")
-    #     print("다음 사항을 확인해주세요:")
-    #     print("1. ESP32-CAM이 켜져 있는지")
-    #     print("2. ESP32-CAM과 컴퓨터가 같은 네트워크에 연결되어 있는지")
-    #     print("3. ESP32-CAM의 IP 주소가 올바른지")
-    #     return
-    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("카메라 스트림을 초기화할 수 없습니다.")
+        print("다음 사항을 확인해주세요:")
+        print("1. ESP32-CAM이 켜져 있는지")
+        print("2. ESP32-CAM과 컴퓨터가 같은 네트워크에 연결되어 있는지")
+        print("3. ESP32-CAM의 IP 주소가 올바른지")
+        return
+    #cap = cv2.VideoCapture(0)
     # 스트리밍 해상도 설정
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1600)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
 
     monitor = SafetyMonitor()
 
@@ -173,10 +173,10 @@ def main():
     print("'q' 키를 눌러 종료합니다.")
 
     # 오른쪽 패널의 x 좌표와 너비 설정
-    panel_x_start = 480
-    panel_width = 640 - panel_x_start # 160 pixels
-    text_margin = 10 # 텍스트 좌우 여백
-    text_area_width = panel_width - text_margin * 2 # 약 140 픽셀
+    panel_x_start = 1200
+    panel_width = 1600 - panel_x_start  # 400 pixels
+    text_margin = 20  # 텍스트 좌우 여백
+    text_area_width = panel_width - text_margin * 2  # 약 360 픽셀
 
     try:
         while True:
@@ -192,24 +192,24 @@ def main():
 
             # 배경 사각형 (오른쪽에 정보 표시)
             overlay = frame.copy()
-            cv2.rectangle(overlay, (panel_x_start, 0), (640, 480), (0, 0, 0), -1)
+            cv2.rectangle(overlay, (panel_x_start, 0), (1600, 1200), (0, 0, 0), -1)
             cv2.addWeighted(overlay, 0.7, frame, 0.3, 0, frame)
 
             # 제목
-            y_position = 20
+            y_position = 40
             # 제목은 줄바꿈 필요 없으므로 max_width None
             frame = monitor.put_korean_text(frame, "테스트 모니터링", (panel_x_start + text_margin, y_position), (255, 255, 255), is_title=True)
-            y_position += 30  # 세로 간격 조정
+            y_position += 60  # 세로 간격 조정
 
             # 현재 시간 표시
             current_time = time.strftime("%H:%M:%S")
             # 시간도 줄바꿈 필요 없으므로 max_width None
             frame = monitor.put_korean_text(frame, f"시간: {current_time}", (panel_x_start + text_margin, y_position), (200, 200, 200))
-            y_position += 25  # 세로 간격 조정
+            y_position += 50  # 세로 간격 조정
 
             # 구분선
-            cv2.line(frame, (panel_x_start + text_margin, y_position), (panel_x_start + panel_width - text_margin, y_position), (100, 100, 100), 1)
-            y_position += 15  # 세로 간격 조정
+            cv2.line(frame, (panel_x_start + text_margin, y_position), (panel_x_start + panel_width - text_margin, y_position), (100, 100, 100), 2)
+            y_position += 30  # 세로 간격 조정
 
             # 감지된 상태 표시
             has_danger = False
@@ -249,9 +249,9 @@ def main():
                 frame = monitor.put_korean_text(frame, "정상 상태", (panel_x_start + text_margin, y_position), (0, 255, 0))
 
             # 하단 안내 메시지
-            y_position = 440
+            y_position = 1100
             frame = monitor.put_korean_text(frame, "\'a\': 분석 시작", (panel_x_start + text_margin, y_position), (200, 200, 200))
-            y_position += 20
+            y_position += 40
             frame = monitor.put_korean_text(frame, "\'q\': 종료", (panel_x_start + text_margin, y_position), (200, 200, 200))
 
             cv2.imshow('테스트 모니터링 시스템', frame)
