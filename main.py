@@ -48,9 +48,9 @@ class SafetyMonitor:
 
         self.active_warnings = []
         self.font_path = '/Users/brody/Downloads/Mediapipe/Project/NanumGothic.ttf'
-        self.font_size = 18  # 일반 텍스트 폰트 크기
-        self.title_font_size = 22  # 제목용 폰트 크기
-        self.warning_font_size = 14 # 경고 메시지 폰트 크기
+        self.font_size = 18  
+        self.title_font_size = 22 
+        self.warning_font_size = 14
         self.is_analyzing = False
         self.last_analysis_time = 0
         self.analysis_interval = 1.0
