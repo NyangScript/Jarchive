@@ -36,8 +36,8 @@
 
 
 // Wi-Fi Credentials
-const char* ssid = "전혜리의 iPhone";         // 실제 Wi-Fi SSID로 변경
-const char* password = "12121212"; // 실제 Wi-Fi 비밀번호로 변경
+const char* ssid = "TOFFICE-RPL";         // 실제 Wi-Fi SSID로 변경
+const char* password = "WMS1348B2F"; // 실제 Wi-Fi 비밀번호로 변경
 
 
 WebServer server(80); // HTTP 서버 포트 80번
