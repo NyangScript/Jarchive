@@ -179,7 +179,7 @@ void handleRoot() {
   html += "<title>메인화면</title>";
   html += "<style>";
   html += "* { box-sizing: border-box; margin: 0; padding: 0; }";
-  html += "body { font-family: 'Arial', sans-serif; background-color: #e0f7fa; color: #333; line-height: 1.6; padding-bottom: 60px; }"; // 바텀 네비게이션 높이만큼 패딩 추가
+  html += "body { font-family: 'Arial', sans-serif; background-color: #e0f7fa; color: #333; line-height: 1.6; padding-bottom: 60px; }"; 
   html += ".header { background-color: #00BCD4; color: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }";
   html += ".header h1 { font-size: 20px; font-weight: bold; }";
   html += ".container { padding: 10px; }";
@@ -188,12 +188,12 @@ void handleRoot() {
   /* Profile & Icons Section */
   html += ".profile-section { text-align: center; margin-bottom: 15px; }";
   html += ".profile-picture { width: 70px; height: 70px; background-color: #b2ebf2; border-radius: 50%; margin: 0 auto 10px; display: block; }";
-  html += ".profile-section p { font-size: 14px; color: #555; margin-bottom: 15px; }"; // 사용자 이름 스타일
+  html += ".profile-section p { font-size: 14px; color: #555; margin-bottom: 15px; }";
   html += ".icon-buttons { display: flex; justify-content: space-around; }";
-  html += ".icon-button-link { text-decoration: none; color: inherit; }"; // 링크 스타일 추가
-  html += ".icon-button-link div { display: flex; flex-direction: column; align-items: center; }"; // 아이콘 버튼 레이아웃
+  html += ".icon-button-link { text-decoration: none; color: inherit; }"; 
+  html += ".icon-button-link div { display: flex; flex-direction: column; align-items: center; }"; 
   html += ".icon-button-link .icon { width: 40px; height: 40px; background-color: #00BCD4; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; margin-bottom: 5px; }"; // 아이콘 스타일
-  html += ".icon-button-link:hover { opacity: 0.8; }"; // 호버 효과 추가
+  html += ".icon-button-link:hover { opacity: 0.8; }";
 
   /* Weekly Status Section */
   html += ".weekly-status { display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px; }";
@@ -277,18 +277,17 @@ void handleRoot() {
   /* Bottom Navigation */
   // 홈 버튼을 활성 상태로 표시
   html += "<div class='bottom-nav'>";
-  html += "<a href='/' class='nav-item active'><div class='icon'>🏠</div>홈</a>"; // 현재 페이지 링크
-  html += "<a href='/anomalous_record' class='nav-item'><div class='icon'>?</div>이상행동 기록</a>"; // 이상행동 기록으로 이동 링크
-  html += "<a href='/dangerous_record' class='nav-item'><div class='icon'>▲</div>위험행동 기록</a>"; // 위험행동 기록으로 이동 링크
-  html += "<a href='/report' class='nav-item'><div class='icon'>🔔</div>신고</a>"; // 신고 페이지 (예정)
-  html += "</div>"; // end bottom-nav
+  html += "<a href='/' class='nav-item active'><div class='icon'>🏠</div>홈</a>"; 
+  html += "<a href='/anomalous_record' class='nav-item'><div class='icon'>?</div>이상행동 기록</a>"; 
+  html += "<a href='/dangerous_record' class='nav-item'><div class='icon'>▲</div>위험행동 기록</a>"; 
+  html += "<a href='/report' class='nav-item'><div class='icon'>🔔</div>신고</a>"; 
+  html += "</div>"; 
 
 
   html += "<script>";
   html += "const GEMINI_API_KEY = 'AIzaSyCK5WE5NxHlCHQGd5agdkl5dZs0KLgFIXM';";
   html += "const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=' + GEMINI_API_KEY;";
 
-  // 위험 시나리오 정의 (기존 코드 유지)
   html += "const dangerScenarios = [";
   html += "{ id: 'left_hand', name: '왼손 들기', warning: '테스트: 왼손을 들었습니다!', description: '사람이 왼손을 들고 있는지' },";
   html += "{ id: 'right_hand', name: '오른손 들기', warning: '테스트: 오른손을 들었습니다!', description: '사람이 오른손을 들고 있는지' },";
@@ -303,7 +302,6 @@ void handleRoot() {
   html += "let analysisTimer = null;";
   html += "let speakingTimer = {};";
 
-  // dangerStates 초기화 (기존 코드 유지)
   html += "dangerScenarios.forEach(scenario => {";
   html += "  dangerStates[scenario.id] = 0;";
   html += "});";
